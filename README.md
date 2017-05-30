@@ -20,7 +20,7 @@ The proposed experiment structure is following:
   For example, we can to describe a two layer LSTM model as
   ```yaml
   # experiment1.yaml:
-  learning_rate: 1e-4  # the learning rate for training
+  learning_rate: 1.e-4  # the learning rate for training
   network:
     type: LSTM  # network type
     layers: 2  # number of layers
@@ -32,7 +32,7 @@ The proposed experiment structure is following:
   ```yaml
   # experiment2.yaml:
   parent: experiment1.yaml
-  learning_rate: 1e-5
+  learning_rate: 1.e-5
   ```
 - the configuration is parsed and provided to the script as a dictionary,
   similarly to `argparse`;
@@ -41,7 +41,7 @@ The proposed experiment structure is following:
   The same configuration
   as in `experiment2.yaml` can be obtained when the main script is run as
   ```bash
-  train.py experiment1.yaml learning_rate=1e-5
+  train.py experiment1.yaml learning_rate=1.e-5
   ```
 - the script may have several "modes" of running
 
