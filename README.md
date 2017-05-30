@@ -9,10 +9,10 @@ following features
 
 Additionally, researches frequently want to
 - easily run new versions of old experiments;
-- alter configurations from the command line to poke around.
+- alter specifications from the command line to poke around.
 
 Given this desiderata, this project provides a wrapper around the 
-`ArgumentParser` from `argparse` package which can read YAML configurations.
+`ArgumentParser` from `argparse` package which can read YAML specifications.
 
 The proposed experiment structure is following:
 - the hyper-parameters are stored in YAML format.
@@ -34,11 +34,11 @@ The proposed experiment structure is following:
   parent: experiment1.yaml
   learning_rate: 1.e-5
   ```
-- the configuration is parsed and provided to the script as a dictionary,
+- the specification is parsed and provided to the script as a dictionary,
   similarly to `argparse`;
-- the configuration can be altered from the command line
+- the specification can be altered from the command line
 
-  The same configuration
+  The same specification
   as in `experiment2.yaml` can be obtained when the main script is run as
   ```bash
   train.py experiment1.yaml learning_rate=1.e-5
@@ -55,7 +55,7 @@ The proposed experiment structure is following:
 Usage
 -----
 
-First, we create the a simple yaml configuration:
+First, we create the a simple yaml specification:
 
 ```python
 >>> with open('conf.yaml', 'wb') as f:
@@ -91,12 +91,12 @@ Elements in the dictionary are accessed with the dot notation as
 
 ### Inheritance
 
-Frequently a configuration for a given experiment is just a slight
+Frequently a specification for a given experiment is just a slight
 modification of a previous one. To avoid code duplication this package
-provides means to alter the configuration.
+provides means to alter the specification.
 
-A yaml configuration file can be inherited from another file. The `parent`
-field instructs the parser to read the parent configuration file first,
+A yaml specification file can be inherited from another file. The `parent`
+field instructs the parser to read the parent specification file first,
 then update the child. For example, given two files
 ```yaml
 # conf_base.yaml:
@@ -108,7 +108,7 @@ parent: conf_base.yaml
 encoder_parameters:
     shape: 50
 ```
-The resulting configuration is equivalent to
+The resulting specification is equivalent to
 ```yaml
 encoder_parameters:
     shape: 50
