@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import yaml
 import os
@@ -10,7 +11,7 @@ class ParseChanges(argparse.Action):
         setattr(args, self.dest, values)
 
 
-class ConfigurationParser(object):
+class SpecificationParser(object):
     r"""Configuration parser.
 
     A smart extension over the argument parser which can read and modify
@@ -32,81 +33,6 @@ class ConfigurationParser(object):
     modes : dict
         Named subparsers for different modes.
 
-    Usage
-    -----
-
-    First, we create the a simple yaml configuration:
-
-    >>> with open('conf.yaml', 'wb') as f:
-    ...     _ = f.write(b"parameter_a: 42")
-
-    Then, we create a parser and feed it the config file name:
-
-    >>> parser = ConfigurationParser()
-    >>> args = parser.parse_args(['conf.yaml'])
-    >>> print(args['parameter_a'])
-    42
-    >>> print(args['cmd_args']['config_path'])
-    conf.yaml
-
-    Defaults from the config can be changed from the command line,
-    this corresponds to a call like
-    ```
-    your_script.py conf.yaml parameter_a=43
-    ```
-
-    >>> parser = ConfigurationParser()
-    >>> args = parser.parse_args(['conf.yaml', 'parameter_a=43'])
-    >>> print(args['parameter_a'])
-    43
-
-    Elements in the dictionary are accessed with the dot notation as
-    `dictionary.element=new_value`.
-
-    ### Inheritance
-
-    Frequently a configuration for a given experiment is just a slight
-    modification of a previous one. To avoid code duplication this package
-    provides means to alter the configuration.
-
-    A yaml configuration file can be inherited from another file. The `parent`
-    field instructs the parser to read the parent configuration file first,
-    then update the child. For example, given two files
-    ```
-    > conf_base.yaml:
-    encoder_parameters:
-        shape: 40
-        type: raw_features
-    > conf_child.yaml:
-    parent: conf_base.yaml
-    encoder_parameters:
-        shape: 50
-    ```
-    The resulting configuration is equivalent to
-    ```
-    encoder_parameters:
-        shape: 50
-        type: raw_features
-    ```
-
-    Note that the dictionary is updated, not rewritten, therefore the `type`
-    field stays untouched.
-
-    ### Modes
-
-    This feature helps to maintain several modes for the experiment, such
-    as `create_data`, `train`, `test`, `generate`, and so on.
-
-    >>> parser = ConfigurationParser()
-    >>> train_parser = parser.add_mode('train')
-    >>> _ = train_parser.add_argument('--checkpoint-dir')
-    >>> args = parser.parse_args(
-    ...     ['conf.yaml', 'train', '--checkpoint-dir', './models/'])
-    >>> print(args['checkpoint_dir'])
-    ./models/
-
-    ### Callback Functions
-
     """
     def __init__(self, schema_path=None, **kwargs):
         self.parser = argparse.ArgumentParser(**kwargs)
@@ -114,6 +40,9 @@ class ConfigurationParser(object):
         self.modes = OrderedDict()
         self._subparsers = None
         self.parser.add_argument('config_path', help='Configuration file path')
+
+    def add_argument(self, *args, **kwargs):
+        return self.parser.add_argument(*args, **kwargs)
 
     def _read_config(self, file_):
         """Reads a configuration from YAML file.
@@ -205,7 +134,19 @@ class ConfigurationParser(object):
         self.modes[name] = parser
         return parser
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(self, args=None, namespace=None, log_spec=False):
+        """Parse arguments and specification.
+
+        Parameters
+        ----------
+        args : list
+            Arguments for the argument parser.
+        namespace : list
+            Namespace for the argument parser.
+        log_spec : bool
+            Log the specification after parsing.
+
+        """
         for parser in self.modes.values():
             parser.add_argument(
                 "config_changes", default=[], action=ParseChanges, nargs='*',
@@ -216,27 +157,29 @@ class ConfigurationParser(object):
                 help="Changes to configuration. [<path>=<value>]")
         args = self.parser.parse_args(args, namespace)
         config = self._prepare_config(args.__dict__)
+        if log_spec:
+            print(yaml.dump(config))
         return config
 
-    def parse_and_run(self, args=None, namespace=None):
-        config = self.parse_args(args, namespace)
+    def parse_and_run(self, args=None, namespace=None, log_spec=False):
+        """Parse arguments and specification, run the callback.
+
+        Parameters
+        ----------
+        args : list
+            Arguments for the argument parser.
+        namespace : list
+            Namespace for the argument parser.
+        log_spec : bool
+            Log the specification after parsing.
+
+        """
+        config = self.parse_args(args, namespace, log_spec)
         func = config['cmd_args']['func']
         if callable(func):
-            func(**config)
+            return func(**config)
         elif isinstance(func, str):
             module = importlib.import_module('.'.join(func.split('.')[:-1]))
-            getattr(module, func.split('.')[-1])(**config)
+            return getattr(module, func.split('.')[-1])(**config)
         else:
             raise ValueError
-
-
-if __name__ == "__main__":
-    def train(**kwargs):
-        print('training')
-    parser = ConfigurationParser()
-    train_parser = parser.add_mode('train')
-    train_parser.add_argument('--hello', type=int)
-
-    args = parser.parse_args()
-    print(args)
-    #parser.parse_and_run()

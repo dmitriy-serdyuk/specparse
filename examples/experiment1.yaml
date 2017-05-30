@@ -1,0 +1,5 @@
+# experiment1.yaml:
+learning_rate: 1.e-4  # the learning rate for training
+network:
+  type: LSTM  # network type
+  layers: 2  # number of layers

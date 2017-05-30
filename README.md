@@ -1,7 +1,7 @@
-Hierarchical YAML Configuration Parser
+Hierarchical YAML Specification Parser
 ======================================
 
-The aim of this project is to provide simple configurations. Mostly, it
+The aim of this project is to provide simple specifications [1]. Mostly, it
 is targeted for machine learning application where every experiment has 
 following features
 - has a number of hyper-parameters;
@@ -48,6 +48,9 @@ The proposed experiment structure is following:
   This is similar to `subparsers` from `argparse`. 
   
   
+[1]: A more common terminology is "configuration". We use "specification" in
+     this document to emphasize the difference with configurations used other
+     applications as, for example, `.rc` files.
 
 Usage
 -----
@@ -62,7 +65,7 @@ First, we create the a simple yaml configuration:
 Then, we create a parser and feed it the config file name:
 
 ```python
->>> parser = ConfigurationParser()
+>>> parser = SpecificationParser()
 >>> args = parser.parse_args(['conf.yaml'])
 >>> print(args['parameter_a'])
 42
@@ -77,7 +80,7 @@ your_script.py conf.yaml parameter_a=43
 ```
 
 ```python
->>> parser = ConfigurationParser()
+>>> parser = SpecificationParser()
 >>> args = parser.parse_args(['conf.yaml', 'parameter_a=43'])
 >>> print(args['parameter_a'])
 43
@@ -121,7 +124,7 @@ This feature helps to maintain several modes for the experiment, such
 as `create_data`, `train`, `test`, `generate`, and so on.
 
 ```python
->>> parser = ConfigurationParser()
+>>> parser = SpecificationParser()
 >>> train_parser = parser.add_mode('train')
 >>> _ = train_parser.add_argument('--checkpoint-dir')
 >>> args = parser.parse_args(
@@ -131,3 +134,34 @@ as `create_data`, `train`, `test`, `generate`, and so on.
 ```
 
 ### Callback Functions
+
+To reduce the amount of the template code, the parser can run a function 
+for a mode providing the specification as keyword arguments.
+
+```python
+>>> parser = SpecificationParser()
+>>> def train(parameter_a, cmd_args):
+...    print("training with parameter_a =", parameter_a)
+>>> train_parser = parser.add_mode('train', train)
+>>> _ = train_parser.add_argument('--checkpoint-dir')
+>>> args = parser.parse_and_run(
+...     ['conf.yaml', 'train', '--checkpoint-dir', './models/'])
+training with parameter_a = 42
+```
+
+The function can be passed as a string with a full path to a module. In this
+case the module will be imported first, then the function from this module is
+called. This is useful when the import takes time and it is desirable to parse
+the arguments and the specification first to insure that it is correct.
+
+Utilities
+---------
+
+### `print-spec`
+
+Parses and print out the specification.
+
+Related Projects
+----------------
+
+- [sacred](https://github.com/IDSIA/sacred)

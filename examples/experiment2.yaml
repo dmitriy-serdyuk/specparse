@@ -1,0 +1,3 @@
+# experiment2.yaml:
+parent: examples/experiment1.yaml
+learning_rate: 1.e-5
