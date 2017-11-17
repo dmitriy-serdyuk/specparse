@@ -6,8 +6,8 @@ with open('README.md') as f:
 
 
 setup(
-    name='DeepComplexNetworks',
-    version='1',
+    name='specparse',
+    version='0.1',
     license='MIT',
     long_description=DESCRIPTION,
     packages=['specparse'],
